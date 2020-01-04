@@ -151,7 +151,11 @@ sub HP1000_Initialize($) {
     $hash->{parseParams}   = 1;
 
     $hash->{AttrList} =
-"disable:1,0 disabledForIntervals do_not_notify:1,0 wu_push:1,0 wu_indoorValues:1,0 wu_id wu_password wu_realtime:1,0 wu_dataValues extSrvPush_Url stateReadingsLang:en,de,at,ch,nl,fr,pl webhookFWinstances:sortable-strict,$webhookFWinstance stateReadings stateReadingsFormat:0,1 bogusFilter:0,1 "
+        "disable:1,0 disabledForIntervals do_not_notify:1,0 wu_push:1,0 "
+      . "wu_indoorValues:1,0 wu_id wu_password wu_pushURL wu_realtime:1,0 "
+      . "wu_dataValues extSrvPush_Url stateReadingsLang:en,de,at,ch,nl,fr,pl "
+      . "webhookFWinstances:sortable-strict,$webhookFWinstance stateReadings "
+      . "stateReadingsFormat:0,1 bogusFilter:0,1 "
       . $readingFnAttributes;
 
     my @wu;
@@ -1324,6 +1328,7 @@ sub HP1000_PushWU($$) {
     my $wu_user         = AttrVal( $name, "wu_id", "" );
     my $wu_pass         = AttrVal( $name, "wu_password", "" );
     my $wu_realtime     = AttrVal( $name, "wu_realtime", undef );
+    my $wu_pushURL      = AttrVal( $name, "wu_pushURL", undef );
     my $wu_indoorValues = AttrVal( $name, "wu_indoorValues", 1 );
     my $wu_dataValues   = AttrVal( $name, "wu_dataValues", undef );
     my $wu_pushValues   = AttrVal( $name, "wu_pushValues", undef );
@@ -1343,6 +1348,12 @@ sub HP1000_PushWU($$) {
         readingsBulkUpdateIfChanged( $hash, "wu_state", $return );
         readingsEndUpdate( $hash, 1 );
         return;
+    }
+
+    if ($wu_pushURL && $wu_pushURL ne "" &&
+        $wu_pushURL !~ m/^(https?):\/\/(.*?).[^\s]*$/i) {
+        Log3 $name, 4, "HP1000 $name: wrong WU pushurl format: $wu_pushURL";
+        $wu_pushURL = "";
     }
 
     if ( defined($wu_realtime) && $wu_realtime eq "0" ) {
@@ -1408,12 +1419,14 @@ sub HP1000_PushWU($$) {
       if ( defined( $webArgs->{realtime} )
         && !defined( $webArgs->{rtfreq} ) );
 
-    my $wu_url = (
-        defined( $webArgs->{realtime} )
-          && $webArgs->{realtime} eq "1"
-        ? "https://rtupdate.wunderground.com/weatherstation/updateweatherstation.php?"
-        : "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?"
-    );
+    my $wu_url = "";
+    if ( $wu_pushURL && $wu_pushURL ne "") {
+        $wu_url = $wu_pushURL;
+    } elsif ($webArgs->{realtime} && $webArgs->{realtime} eq "1") {
+        $wu_url = "https://rtupdate.wunderground.com/weatherstation/updateweatherstation.php?";
+    } else {
+        $wu_url = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?";
+    }
 
     $webArgs->{ID}       = $wu_user;
     $webArgs->{PASSWORD} = $wu_pass;
@@ -1662,6 +1675,9 @@ sub HP1000_HistoryDb($$;$$$) {
 
       <a name="wu_realtime"></a><li><b>wu_realtime</b></li>
         Send the data to the WU realtime server instead of using the standard server (defaults to 1=yes)
+
+      <a name="wu_pushURL"></a><li><b>wu_pushURL</b></li>
+        Use a custom URL instead of the default Weather Underground server
     </ul>
     </div>
 
@@ -1737,6 +1753,9 @@ sub HP1000_HistoryDb($$;$$$) {
 
       <a name="wu_realtime"></a><li><b>wu_realtime</b></li>
         Sendet die Daten an den WU Echtzeitserver statt an den Standard Server (Standard ist 1=an)
+
+      <a name="wu_pushURL"></a><li><b>wu_pushURL</b></li>
+        Sendet die Daten an eine dedizierte URL statt an den Weather Undergrund Server
     </ul>
     </div>
 
