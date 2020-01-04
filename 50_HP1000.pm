@@ -1421,8 +1421,13 @@ sub HP1000_PushWU($$) {
     my $cmd;
 
     while ( my ( $key, $value ) = each %{$webArgs} ) {
+        if ( $key =~ /^(dateutc)$/i ) {
+                $value =~ s/ /\%20/;
+                $value =~ s/\:/\%3A/;
+        }
+
         $value = urlEncode($value)
-          if ( $key =~ /^(softwaretype|dateutc)$/i );
+          if ( $key =~ /^(softwaretype)$/i );
 
         if (   ( $wu_indoorValues || $key =~ m/^in/i )
             && ( !$wu_pushValues || grep ( $_ eq $key, @whitelist ) ) )
