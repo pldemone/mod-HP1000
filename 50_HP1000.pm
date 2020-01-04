@@ -1432,6 +1432,8 @@ sub HP1000_PushWU($$) {
         }
     }
 
+    $cmd =~ s/\&$//;
+
     HttpUtils_NonblockingGet(
         {
             url         => $wu_url . $cmd,
