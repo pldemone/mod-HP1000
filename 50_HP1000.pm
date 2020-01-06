@@ -1436,7 +1436,7 @@ sub HP1000_PushWU($$) {
     while ( my ( $key, $value ) = each %{$webArgs} ) {
         if ( $key =~ /^(dateutc)$/i ) {
                 $value =~ s/ /\%20/;
-                $value =~ s/\:/\%3A/;
+                $value =~ s/\:/\%3A/g;
         }
 
         $value = urlEncode($value)
