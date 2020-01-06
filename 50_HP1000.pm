@@ -1337,7 +1337,13 @@ sub HP1000_PushWU($$) {
 
     Log3 $name, 5, "HP1000 $name: called function HP1000_PushWU()";
 
-    if ( $wu_user eq "" && $wu_pass eq "" ) {
+    if ($wu_pushURL && $wu_pushURL ne "" &&
+        $wu_pushURL !~ m/^(https?):\/\/(.*?).[^\s]*$/i) {
+        Log3 $name, 4, "HP1000 $name: wrong WU pushurl format: $wu_pushURL";
+        $wu_pushURL = "";
+    }
+
+    if ( $wu_pushURL eq "" &&  $wu_user eq "" && $wu_pass eq "" ) {
         Log3 $name, 4,
           "HP1000 $name: "
           . "missing attributes for Weather Underground transfer: wu_user and wu_password";
@@ -1348,12 +1354,6 @@ sub HP1000_PushWU($$) {
         readingsBulkUpdateIfChanged( $hash, "wu_state", $return );
         readingsEndUpdate( $hash, 1 );
         return;
-    }
-
-    if ($wu_pushURL && $wu_pushURL ne "" &&
-        $wu_pushURL !~ m/^(https?):\/\/(.*?).[^\s]*$/i) {
-        Log3 $name, 4, "HP1000 $name: wrong WU pushurl format: $wu_pushURL";
-        $wu_pushURL = "";
     }
 
     if ( defined($wu_realtime) && $wu_realtime eq "0" ) {
@@ -1428,8 +1428,8 @@ sub HP1000_PushWU($$) {
         $wu_url = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php?";
     }
 
-    $webArgs->{ID}       = $wu_user;
-    $webArgs->{PASSWORD} = $wu_pass;
+    $webArgs->{ID}       = $wu_user if $wu_user ne "";
+    $webArgs->{PASSWORD} = $wu_pass if $wu_pass ne "";
 
     my $cmd;
 
