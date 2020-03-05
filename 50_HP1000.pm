@@ -416,7 +416,9 @@ sub HP1000_CGI() {
     my $result = "Initialized";
     my $webArgs;
     my $servertype;
-
+    
+    Log3 $name, 5, "HP1000 $name: called function HP1000_CGI()";
+    
     #TODO: should better be blocked in FHEMWEB already
     return ( "text/plain; charset=utf-8", "Booting up" )
       unless ($init_done);
@@ -592,16 +594,17 @@ sub HP1000_CGI() {
 
     # Filter values that seem bogus
     if ( AttrVal( $name, 'bogusFilter', 0 ) ne '0' ) {
-        foreach ($webArgs) {
-            next unless ( looks_like_number( $webArgs->{$_} ) );
-
-            if ( $webArgs->{$_} < -273.2 ) {
+        Log3 $name, 5,
+              "HP1000: Check data for bogus values";
+        foreach my $element (keys %{$webArgs}) {
+            next unless ( looks_like_number( $webArgs->{$element} ) );
+            if ( $webArgs->{$element} < -273.2 ) {
                 Log3 $name, 4,
                     "HP1000: "
                   . "Received value '"
-                  . $webArgs->{$_}
-                  . "' for '$_' seems out of range - removed from data set";
-                delete $webArgs->{$_};
+                  . $webArgs->{$element}
+                  . "' for '$element' seems out of range - removed from data set";
+                delete $webArgs->{$element};
             }
         }
     }
