@@ -1,5 +1,15 @@
 ###############################################################################
 # $Id$
+#
+# 50_HP1000.pm
+#
+# written by Julian Pawlowski
+#
+# Modifications by Mirko Lindner 2021-03-01
+# e-mail: demon@pro-linux.de
+#
+###############################################################################
+# $Id$
 package main;
 use strict;
 use warnings;
